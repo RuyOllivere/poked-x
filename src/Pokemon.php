@@ -17,9 +17,12 @@ final class Pokemon
     private ?string $sprite;
     private ?string $evolutionUrl;
     private ?string $locationAreasUrl;
+        /** @var string[] */
+        private array $locationAreas;
     private ?string $description;
+    private bool $isLegendary;
 
-    public function __construct(int $id, string $name, array $types, array $abilities, PokemonStats $stats, ?string $sprite = null, ?string $evolutionUrl = null, ?string $locationAreasUrl = null, ?string $description = null)
+    public function __construct(int $id, string $name, array $types, array $abilities, PokemonStats $stats, ?string $sprite = null, ?string $evolutionUrl = null, ?string $locationAreasUrl = null, ?string $description = null, bool $isLegendary = false, array $locationAreas = [])
     {
         $this->id = $id;
         $this->name = $name;
@@ -30,6 +33,8 @@ final class Pokemon
         $this->evolutionUrl = $evolutionUrl;
         $this->locationAreasUrl = $locationAreasUrl;
         $this->description = $description;
+        $this->locationAreas = $locationAreas;
+        $this->isLegendary = $isLegendary;
     }
 
     public function id(): int { return $this->id; }
@@ -40,6 +45,7 @@ final class Pokemon
     public function sprite(): ?string { return $this->sprite; }
     public function evolutionUrl(): ?string { return $this->evolutionUrl; }
     public function locationAreasUrl(): ?string { return $this->locationAreasUrl; }
+    public function isLegendary(): bool { return $this->isLegendary; }
 
     public function typeNames(): array
     {
@@ -64,7 +70,9 @@ final class Pokemon
             'sprite' => $this->sprite,
             'evolution_url' => $this->evolutionUrl,
             'location_areas_url' => $this->locationAreasUrl,
+            'location_areas' => $this->locationAreas,
             'description' => $this->description,
+            'is_legendary' => $this->isLegendary,
         ];
     }
 
@@ -87,6 +95,7 @@ final class Pokemon
         $sprite = $data['sprites']['front_default'] ?? null;
         $evolutionUrl = $data['species']['url'] ?? null;
         $locationAreasUrl = $data['location_area_encounters'] ?? null;
+        $locationAreas = $data['location_areas'] ?? [];
 
         $description = null;
         if (!empty($data['flavor_text_entries']) && is_array($data['flavor_text_entries'])) {
@@ -112,8 +121,11 @@ final class Pokemon
             }
         }
 
-        return new self($id, $name, $types, $abilities, $stats, $sprite, $evolutionUrl, $locationAreasUrl, $description);
+
+
+        return new self($id, $name, $types, $abilities, $stats, $sprite, $evolutionUrl, $locationAreasUrl, $description, (bool)($data['is_legendary'] ?? false), $locationAreas);
     }
 
     public function description(): ?string { return $this->description; }
+    public function locationAreas(): array { return $this->locationAreas; }
 }

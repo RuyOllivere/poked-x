@@ -40,6 +40,7 @@ class PokemonFetcher {
             }, $data['abilities']),
             'location_areas_url' => $data['location_area_encounters'],
             'description' => $data['flavor_text_entries'][0]['flavor_text'] ?? [],
+            // 'is_legendary' => $data['is_legendary'],
         ];
         if (!empty($data['species']['url'])) {
           $speciesJson = @file_get_contents($data['species']['url']);
@@ -47,6 +48,20 @@ class PokemonFetcher {
             $species = json_decode($speciesJson, true);
             if (is_array($species) && !empty($species['flavor_text_entries'])) {
               $data['flavor_text_entries'] = $species['flavor_text_entries'];
+            }
+          }
+        }
+
+        if (!empty($data['location_area_encounters']) && is_string($data['location_area_encounters'])) {
+          $encountersJson = @file_get_contents($data['location_area_encounters']);
+          if ($encountersJson !== false) {
+            $encounters = json_decode($encountersJson, true);
+            if (is_array($encounters)) {
+              $names = array_map(function($item) {
+                return $item['location_area']['name'] ?? '';
+              }, $encounters);
+              $names = array_values(array_filter(array_unique($names)));
+              $data['location_areas'] = $names;
             }
           }
         }
@@ -155,10 +170,15 @@ if ($name !== null) {
               <div class="desc"><?php echo ($pokemonData instanceof Pokemon) ? htmlspecialchars($pokemonData->description() ?? '-', ENT_QUOTES) : '...'; ?></div>
             </div>
 
-            <div id="Location" class="info">
+            <!-- <div id="Location" class="info">
               <div class="label">Location:</div>
-              <div class="desc"><?php echo ($pokemonData instanceof Pokemon) ? htmlspecialchars($pokemonData->locationAreasUrl(), ENT_QUOTES) : '...'; ?></div>
-            </div>
+                <div class="desc"><?php echo ($pokemonData instanceof Pokemon && !empty($pokemonData->locationAreas())) ? htmlspecialchars(implode(', ', $pokemonData->locationAreas()), ENT_QUOTES) : '...'; ?></div>
+            </div> -->
+
+            <!-- <div id="isLegendary" class="info">
+              <div class="label">Legendary:</div>
+              <div class="desc"><?php echo ($pokemonData instanceof Pokemon) ? htmlspecialchars($pokemonData->isLegendary() ? 'Yes' : 'No', ENT_QUOTES) : '...'; ?></div>
+            </div> -->
 
           </section>
         </div>
