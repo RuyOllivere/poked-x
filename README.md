@@ -1,0 +1,5 @@
+## 📸 Preview
+
+![Pokedéx](/imagem.png)
+
+---
