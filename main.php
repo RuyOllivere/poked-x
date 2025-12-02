@@ -1,5 +1,12 @@
 <?php
 
+require_once __DIR__ . '/src/ValueObjects/PokemonType.php';
+require_once __DIR__ . '/src/ValueObjects/PokemonAbility.php';
+require_once __DIR__ . '/src/ValueObjects/PokemonStats.php';
+require_once __DIR__ . '/src/Pokemon.php';
+
+use App\Pokemon;
+
 class PokemonFetcher {
     private $apiUrl = "https://pokeapi.co/api/v2/pokemon/";
 
@@ -11,11 +18,11 @@ class PokemonFetcher {
         }
         return json_decode($response, true);
     }
-
+    
     public function getPokemonData($name) {
         $data = $this->fetchPokemon($name);
         if ($data === null) {
-            return "Pokemon not found.";
+          return null;
         }
 
         $pokemonInfo = [
@@ -27,11 +34,24 @@ class PokemonFetcher {
                 return $type['type']['name'];
             }, $data['types']),
             'sprite' => $data['sprites']['front_default'],
-            'evolution_chain' => $data['species']['url'],
-            'Location areas' => $data['location_area_encounters']
+            'Location areas' => $data['location_area_encounters'],
+            'abilities' => array_map(function($ability) {
+                return $ability['ability']['name'];
+            }, $data['abilities']),
+            'location_areas_url' => $data['location_area_encounters'],
+            'description' => $data['flavor_text_entries'][0]['flavor_text'] ?? [],
         ];
+        if (!empty($data['species']['url'])) {
+          $speciesJson = @file_get_contents($data['species']['url']);
+          if ($speciesJson !== false) {
+            $species = json_decode($speciesJson, true);
+            if (is_array($species) && !empty($species['flavor_text_entries'])) {
+              $data['flavor_text_entries'] = $species['flavor_text_entries'];
+            }
+          }
+        }
 
-        return $pokemonInfo;
+        return Pokemon::fromApiData($data);
     }
 }
 $name = isset($_GET['pokemonName']) ? $_GET['pokemonName'] : null;
@@ -70,12 +90,12 @@ if ($name !== null) {
           <div class="main-screen__top-lights">
           </div>
           <div id="display" class="main-screen__display">
-            <?php if (is_array($pokemonData) && !empty($pokemonData['sprite'])): ?>
+            <?php if ($pokemonData instanceof Pokemon && !empty($pokemonData->sprite())): ?>
                 <div class="pokemon-image">
-                    <img src="<?php echo htmlspecialchars($pokemonData['sprite'], ENT_QUOTES); ?>" alt="<?php echo htmlspecialchars($pokemonData['name'] ?? 'Pokemon', ENT_QUOTES); ?>">
+                    <img src="<?php echo htmlspecialchars($pokemonData->sprite(), ENT_QUOTES); ?>" alt="<?php echo htmlspecialchars($pokemonData->name() ?? 'Pokemon', ENT_QUOTES); ?>">
                 </div>
                 <div class="search-message" style="display:none;">Searching...</div>
-            <?php elseif ($pokemonData === "Pokemon not found."): ?>
+            <?php elseif ($name !== null && $pokemonData === null): ?>
                 <div class="not-found-message">Pokemon <br>Not Found</div>
             <?php else: ?>
                 <div class="search-message">Search a Pokemon</div>
@@ -112,28 +132,34 @@ if ($name !== null) {
           <section class="info-screen">
             <div id="species" class="info">
               <div class="label">Species:</div>
-              <div class="desc"><?php echo is_array($pokemonData) ? htmlspecialchars($pokemonData['name'] ?? '-', ENT_QUOTES) : '...'; ?></div>
+                <div class="desc"><?php echo ($pokemonData instanceof Pokemon) ? htmlspecialchars($pokemonData->name(), ENT_QUOTES) : '...'; ?></div>
             </div>
             <div id="type" class="info">
               <div class="label">Type:</div>
-              <div class="desc"><?php echo is_array($pokemonData) && !empty($pokemonData['types']) ? htmlspecialchars(implode(', ', $pokemonData['types']), ENT_QUOTES) : '...'; ?></div>
+              <div class="desc"><?php echo ($pokemonData instanceof Pokemon) && !empty($pokemonData->types()) ? htmlspecialchars(implode(', ', $pokemonData->typeNames()), ENT_QUOTES) : '...'; ?></div>
             </div>
             <div id="height" class="info">
               <div class="label">Height:</div>
-              <div class="desc"><?php echo is_array($pokemonData) ? htmlspecialchars((string)$pokemonData['height'], ENT_QUOTES) : '...'; ?></div>
+              <div class="desc"><?php echo ($pokemonData instanceof Pokemon) ? htmlspecialchars((string)$pokemonData->stats()->heightCentimeters(), ENT_QUOTES) / 100 : '...';?>m</div>
             </div>
             <div id="weight" class="info">
               <div class="label">Weight:</div>
-              <div class="desc"><?php echo is_array($pokemonData) ? htmlspecialchars((string)$pokemonData['weight'], ENT_QUOTES) : '...'; ?></div>
+              <div class="desc"><?php echo ($pokemonData instanceof Pokemon) ? htmlspecialchars((string)$pokemonData->stats()->weightKilograms(), ENT_QUOTES) : '...'; ?>kg</div>
             </div>
             <div id="evolution" class="info">
-              <div class="label">Location Areas:</div>
-              <div class="desc"><?php echo is_array($pokemonData) ? htmlspecialchars($pokemonData['location_area_encounters'] ?? '', ENT_QUOTES) : '...'; ?></div>
+              <div class="label">Ability:</div>
+              <div class="desc"><?php echo ($pokemonData instanceof Pokemon) && !empty($pokemonData->abilities()) ? htmlspecialchars(implode(', ', $pokemonData->abilityNames()), ENT_QUOTES) : '...'; ?></div>
             </div>
             <div id="bio" class="info">
               <div class="label">Description:</div>
-              <div class="desc"><?php echo is_array($pokemonData) ? '' : '...'; ?></div>
+              <div class="desc"><?php echo ($pokemonData instanceof Pokemon) ? htmlspecialchars($pokemonData->description() ?? '-', ENT_QUOTES) : '...'; ?></div>
             </div>
+
+            <div id="Location" class="info">
+              <div class="label">Location:</div>
+              <div class="desc"><?php echo ($pokemonData instanceof Pokemon) ? htmlspecialchars($pokemonData->locationAreasUrl(), ENT_QUOTES) : '...'; ?></div>
+            </div>
+
           </section>
         </div>
       </div>
