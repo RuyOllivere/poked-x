@@ -230,4 +230,30 @@ class PokemonRepository{
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function deletePokemon(int $id): bool{
+
+        $stmt = $this->connection->prepare("DELETE FROM pokemons WHERE id = ?");
+        return $stmt->execute([$id]);
+
+    }
+
+    public function countPokemons(): int{
+
+        $stmt = $this->connection->prepare("SELECT COUNT(*) FROM pokemons");
+        $stmt->execute();
+        return (int) $stmt->fetchColumn();
+
+    }
+
+    public function getRankByStats(int $limit = 10): array{
+        $stmt = $this->connection->prepare("SELECT * FROM pokemons ORDER BY (height_m + weight_kg) DESC LIMIT ?");
+        $stmt->execute([$limit]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+}
+
+class PokeApiService {
+    private const BASE_URL = "https://pokeapi.co/api/v2/";
+    
 }
