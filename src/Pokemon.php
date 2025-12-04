@@ -173,5 +173,10 @@ class PokemonRepository{
         $this->connection->exec($sql);
     }
 
+    public function exists(int $id): bool {
+        $stmt = $this->connection->prepare("SELECT COUNT(*) FROM pokemons WHERE id = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetchColumn() > 0;
+    }
 
 }
