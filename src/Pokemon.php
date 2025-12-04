@@ -169,7 +169,7 @@ class PokemonRepository{
             location_areas TEXT,
             description TEXT,
             is_legendary BOOLEAN
-        )";
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
         $this->connection->exec($sql);
     }
 
