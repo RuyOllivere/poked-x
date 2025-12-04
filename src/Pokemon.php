@@ -207,6 +207,14 @@ class PokemonRepository{
             $pokemon->description(),
             $pokemon->isLegendary()
         ]);
-    }   
+    }
+    
+    // can be null in case not found
+    public function getPokemonById(int $id): ?array{
+        $stmt = $this->connection->prepare("SELECT * FROM pokemons WHERE id = ?");
+        $stmt->execute([$id]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ?: null;
+    }
 
 }
