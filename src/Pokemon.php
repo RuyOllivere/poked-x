@@ -179,4 +179,17 @@ class PokemonRepository{
         return $stmt->fetchColumn() > 0;
     }
 
+    public function savePokemon(Pokemon $pokemon): bool {
+
+        if($this->exists($pokemon->id())) {
+            return false; //Already exists
+        }
+
+        // May need ? for fields
+        $sql = "INSERT INTO pokemons (id, name, types, abilities, height_m, height_cm, weight_kg, sprite, evolution_url, location_areas_url, location_areas, description, is_legendary)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                // VALUES (:id, :name, :types, :abilities, :height_m, :height_cm, :weight_kg, :sprite, :evolution_url, :location_areas_url, :location_areas, :description, :is_legendary)";
+
+    }
+
 }
