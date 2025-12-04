@@ -217,4 +217,17 @@ class PokemonRepository{
         return $result ?: null;
     }
 
+    public function getAllPokemons(int $limit = 50): array{
+        $stmt = $this->connection->prepare("SELECT * FROM pokemons ORDER BY id LIMIT ?");
+        $stmt->execute([$limit]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getByType(string $type): array{
+        $stmt = $this->connection->prepare("SELECT * FROM pokemons WHERE types LIKE ? ORDER BY id");
+        $stmt->execute(['%"' . $type . '"%']);
+        // ["$type%"]
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
 }
