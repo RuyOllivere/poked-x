@@ -4,6 +4,7 @@ require_once __DIR__ . '/src/ValueObjects/PokemonType.php';
 require_once __DIR__ . '/src/ValueObjects/PokemonAbility.php';
 require_once __DIR__ . '/src/ValueObjects/PokemonStats.php';
 require_once __DIR__ . '/src/Pokemon.php';
+require_once __DIR__ . '/src/PokemonRepository.php';
 
 use App\Pokemon;
 
@@ -72,12 +73,20 @@ class PokemonFetcher
     return Pokemon::fromApiData($data);
   }
 }
+
 $name = isset($_GET['pokemonName']) ? $_GET['pokemonName'] : null;
 $pokemonData = null;
 
 if ($name !== null) {
   $fetcher = new PokemonFetcher();
   $pokemonData = $fetcher->getPokemonData($name);
+}
+
+// saving in the database
+if ($pokemonData !== null) {
+  $pokemonRepo = new PokemonRepository();
+  // $pokemonData = $pokemonRepo->getPokemonData($pokemonData);
+  $pokemonRepo->savePokemon($pokemonData);
 }
 
 
