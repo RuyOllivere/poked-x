@@ -189,7 +189,24 @@ class PokemonRepository{
         $sql = "INSERT INTO pokemons (id, name, types, abilities, height_m, height_cm, weight_kg, sprite, evolution_url, location_areas_url, location_areas, description, is_legendary)
                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
                 // VALUES (:id, :name, :types, :abilities, :height_m, :height_cm, :weight_kg, :sprite, :evolution_url, :location_areas_url, :location_areas, :description, :is_legendary)";
+        $stats = $pokemon->stats();
+        $stmt = $this->connection->prepare($sql);
 
-    }
+        return $stmt->execute([
+            $pokemon->id(),
+            $pokemon->name(),
+            json_encode($pokemon->typeNames()),
+            json_encode($pokemon->abilityNames()),
+            $stats->heightMeters(),
+            $stats->heightCentimeters(),
+            $stats->weightKilograms(),
+            $pokemon->sprite(),
+            $pokemon->evolutionUrl(),
+            $pokemon->locationAreasUrl(),
+            json_encode($pokemon->locationAreas()),
+            $pokemon->description(),
+            $pokemon->isLegendary()
+        ]);
+    }   
 
 }
