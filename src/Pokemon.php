@@ -129,3 +129,49 @@ final class Pokemon
     public function description(): ?string { return $this->description; }
     public function locationAreas(): array { return $this->locationAreas; }
 }
+
+class PokemonRepository{
+    private PDO $connection;
+
+    public function __construct(string $host = 'localhost', string $db = 'pokemon', string $user = 'root', string $pass = ''){
+        try{
+            // connect to db
+            $dsn = "mysql:host=$host;charset=utf8mb4";
+            $this->connection = new PDO($dsn, $user, $pass);
+
+            $this->connection_aborted->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+            // create db if not exists
+            $this->connection->exec("CREATE DATABASE IF NOT EXISTS $db");
+            $this->connection->exec("USE $db");
+
+            // create table
+            $this->connection->createTable();
+
+
+        } catch (PDOException $e){
+            throw new Exception("Database connection failed: " . $e->getMessage());
+        }
+    }
+
+    private function createTable(){
+        $sql = "CREATE TABLE IF NOT EXISTS pokemons (
+            id INT PRIMARY KEY,
+            name VARCHAR(100),
+            types TEXT,
+            abilities TEXT,
+            height_m FLOAT,
+            height_cm INT,
+            weight_kg FLOAT,
+            sprite VARCHAR(255),
+            evolution_url VARCHAR(255),
+            location_areas_url VARCHAR(255),
+            location_areas TEXT,
+            description TEXT,
+            is_legendary BOOLEAN
+        )";
+        $this->connection->exec($sql);
+    }
+
+
+}
